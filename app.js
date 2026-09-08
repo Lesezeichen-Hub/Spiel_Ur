@@ -28,8 +28,8 @@
       if (destination === PATH_LENGTH) return [{ piece, from: position, to: destination, bearOff: true }];
       if (state.pieces[player].includes(destination)) return [];
       const opponent = other(player);
-      const opponentPiece = state.pieces[opponent].findIndex((otherPosition) => otherPosition === destination);
-      if (opponentPiece >= 0 && (!shared(destination) || destination === PROTECTED_ROSETTE)) return [];
+      const opponentPiece = shared(destination) ? state.pieces[opponent].findIndex((otherPosition) => otherPosition === destination) : -1;
+      if (opponentPiece >= 0 && destination === PROTECTED_ROSETTE) return [];
       return [{ piece, from: position, to: destination, capture: opponentPiece >= 0 ? opponentPiece : null, bearOff: false }];
     });
   }

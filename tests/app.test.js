@@ -30,6 +30,11 @@ test('Steine auf dem gemeinsamen Weg können geschlagen werden', () => {
 test('Nullwurf und fehlende Züge geben automatisch ab', () => {
   assert.equal(game.applyRoll(game.createGame(), roll(.1, .1, .1, .1)).turn, game.DARK);
 });
+test('private Einstiegsfelder der Gegenseite blockieren den Einstieg nicht', () => {
+  const state = { ...game.createGame(), turn: game.DARK, phase: 'move', dice: { dice: [1, 1, 0, 0], total: 2 }, pieces: { [game.LIGHT]: [2, -1, -1, -1, -1, -1, -1], [game.DARK]: [-1, -1, -1, -1, -1, -1, -1] } };
+  const moves = game.legalMoves(state);
+  assert.ok(moves.some((move) => move.piece === 0 && move.from === -1 && move.to === 1));
+});
 test('wer den siebten Stein exakt austrägt, gewinnt', () => {
   const state = { ...game.createGame(), phase: 'move', dice: { dice: [1, 0, 0, 0], total: 1 }, pieces: { [game.LIGHT]: [13, -1, -1, -1, -1, -1, -1], [game.DARK]: [-1, -1, -1, -1, -1, -1, -1] }, borneOff: { [game.LIGHT]: 6, [game.DARK]: 0 } };
   const next = game.applyMove(state, game.legalMoves(state).find((move) => move.piece === 0));
