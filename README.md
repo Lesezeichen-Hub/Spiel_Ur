@@ -34,6 +34,9 @@ spätere babylonische Regeltafel stützt.
   werden. Jede Rosette gewährt einen weiteren Wurf.
 - Ein Stein verlässt das Brett nur mit exakt passender Augenzahl. Wer alle
   sieben Steine austrägt, gewinnt.
+- **Ultra-Schwer** bewertet alle 16 möglichen Vierwürfel-Ergebnisse und bezieht
+  Rosetten-Zusatzwürfe, Schutz eigener Steine, blockierte Einstiege, mögliche
+  Schläge und gegnerische Antwortzüge in eine begrenzte Erwartungswertsuche ein.
 
 Mögliche Züge erscheinen nach einem Wurf hervorgehoben. Der Verlauf dokumentiert
 Würfe, Züge, Rosetten, Schläge und ausgetragene Steine. Laufende Partien werden

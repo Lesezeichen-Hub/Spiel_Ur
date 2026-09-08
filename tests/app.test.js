@@ -43,8 +43,16 @@ test('wer den siebten Stein exakt austrägt, gewinnt', () => {
 });
 test('jede KI-Stufe gibt einen legalen Zug zurück', () => {
   const state = game.applyRoll(game.createGame(), roll(.9, .1, .1, .1));
-  for (const difficulty of ['easy', 'medium', 'hard']) {
+  for (const difficulty of ['easy', 'medium', 'hard', 'ultra']) {
     const move = game.bestMove(state, difficulty);
     assert.ok(game.legalMoves(state).some((candidate) => candidate.piece === move.piece && candidate.to === move.to));
   }
+});
+test('Ultra-Schwer wertet alle 16 Würfelmuster aus', () => {
+  const outcomes = game.diceOutcomes();
+  assert.equal(outcomes.length, 16);
+  assert.equal(new Set(outcomes.map((outcome) => outcome.dice.join(''))).size, 16);
+  const state = game.applyRoll(game.createGame(), roll(.9, .1, .1, .1));
+  const move = game.bestMove(state, 'ultra');
+  assert.ok(game.legalMoves(state).some((candidate) => candidate.piece === move.piece && candidate.to === move.to));
 });

@@ -68,10 +68,78 @@
     const value = (player) => state.borneOff[player] * 35 + state.pieces[player].reduce((sum, position) => sum + Math.max(position, 0) * 1.8, 0);
     return value(perspective) - value(other(perspective));
   }
+
+  function tacticalEvaluate(state, perspective) {
+    if (state.winner) return state.winner === perspective ? 10000 : -10000;
+    const opponent = other(perspective);
+    const progress = (player) => state.borneOff[player] * 100 + state.pieces[player].reduce((sum, position) => sum + Math.max(position, 0) * 2, 0);
+    const protectedCount = (player) => state.pieces[player].filter((position) => position >= 0 && onRosette(position)).length;
+    const captures = (player) => {
+      const rolled = prepareRoll(state, { dice: [1, 0, 0, 0], total: 1 });
+      return legalMoves({ ...rolled, turn: player }).filter((move) => move.capture !== null).length;
+    };
+    const blockedEntries = (player) => state.pieces[other(player)].filter((position) => position < 0).length > 0
+      ? [1, 2, 3, 4].filter((roll) => state.pieces[player].includes(roll - 1)).length
+      : 0;
+    const mobility = (player) => {
+      const rolled = prepareRoll(state, { dice: [1, 0, 0, 0], total: 1 });
+      return legalMoves({ ...rolled, turn: player }).length;
+    };
+    return progress(perspective) - progress(opponent)
+      + (protectedCount(perspective) - protectedCount(opponent)) * 16
+      + (captures(perspective) - captures(opponent)) * 28
+      + (blockedEntries(opponent) - blockedEntries(perspective)) * 12
+      + (mobility(perspective) - mobility(opponent)) * 3;
+  }
+
+  function diceOutcomes() {
+    return Array.from({ length: 16 }, (_, mask) => {
+      const dice = Array.from({ length: 4 }, (_, index) => (mask >> index) & 1);
+      return { dice, total: dice.reduce((sum, value) => sum + value, 0) };
+    });
+  }
+
+  function prepareRoll(state, outcome) {
+    const next = clone(state);
+    next.dice = { dice: [...outcome.dice], total: outcome.total };
+    next.phase = outcome.total > 0 ? 'move' : 'roll';
+    next.lastAction = null;
+    if (next.phase === 'move' && !legalMoves(next).length) { next.turn = other(next.turn); next.phase = 'roll'; }
+    else if (next.phase === 'roll') next.turn = other(next.turn);
+    return next;
+  }
+
+  function ultraExpectedAfterAction(state, perspective, depth) {
+    if (state.winner || depth <= 0) return tacticalEvaluate(state, perspective);
+    const outcomes = diceOutcomes();
+    return outcomes.reduce((sum, outcome) => {
+      const rolled = prepareRoll(state, outcome);
+      return sum + ultraSelect(rolled, perspective, depth);
+    }, 0) / outcomes.length;
+  }
+
+  function ultraSelect(state, perspective, depth) {
+    if (state.winner) return tacticalEvaluate(state, perspective);
+    if (state.phase !== 'move') return ultraExpectedAfterAction(state, perspective, depth - 1);
+    const moves = legalMoves(state);
+    if (!moves.length) return tacticalEvaluate(state, perspective);
+    const values = moves.map((move) => ultraExpectedAfterAction(applyMove(state, move), perspective, depth - 1));
+    return state.turn === perspective ? Math.max(...values) : Math.min(...values);
+  }
+
+  function ultraBestMove(state) {
+    const moves = legalMoves(state);
+    if (!moves.length) return null;
+    const perspective = state.turn;
+    return moves.map((move) => ({ move, value: ultraExpectedAfterAction(applyMove(state, move), perspective, 2) }))
+      .sort((left, right) => right.value - left.value)[0].move;
+  }
+
   function bestMove(state, difficulty = 'medium') {
     const moves = legalMoves(state);
     if (!moves.length) return null;
     if (difficulty === 'easy') return moves[Math.floor(Math.random() * moves.length)];
+    if (difficulty === 'ultra') return ultraBestMove(state);
     const player = state.turn;
     const ranked = moves.map((move) => ({ move, score: evaluate(applyMove(state, move), player) })).sort((a, b) => b.score - a.score);
     return difficulty === 'medium' ? ranked[Math.floor(Math.random() * Math.min(2, ranked.length))].move : ranked[0].move;
@@ -190,7 +258,7 @@
     render(); if (settings.mode === 'computer' && state.turn !== settings.humanSide) computerTurn();
   }
 
-  return { LIGHT, DARK, PLAYERS, ROSSETTES, PROTECTED_ROSETTE, PATH_LENGTH, createGame, rollDice, shared, onRosette, legalMoves, applyRoll, applyMove, bestMove, evaluate, boardCoordinate, mount };
+  return { LIGHT, DARK, PLAYERS, ROSSETTES, PROTECTED_ROSETTE, PATH_LENGTH, createGame, rollDice, shared, onRosette, legalMoves, applyRoll, applyMove, bestMove, evaluate, evaluateTactical: tacticalEvaluate, diceOutcomes, boardCoordinate, mount };
 });
 
 if (typeof document !== 'undefined') window.RoyalGameOfUr.mount(document);
