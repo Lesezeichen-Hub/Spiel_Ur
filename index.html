@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#18263a">
+  <title>Das Königliche Spiel von Ur</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <main class="game-shell">
+    <header class="masthead"><p class="eyebrow">Mesopotamien · ca. 2600–2400 v. Chr.</p><h1>Das Königliche Spiel von Ur</h1><p>Eine spielbare Rekonstruktion nach Irving Finkel.</p></header>
+    <section class="command-bar" aria-label="Spielsteuerung">
+      <label>Spielmodus<select id="mode"><option value="local">2 Spieler vor Ort</option><option value="computer">Gegen Computer</option></select></label>
+      <label id="human-side-control" class="hidden">Deine Steine<select id="human-side"><option value="light">Helle Steine</option><option value="dark">Dunkle Steine</option></select></label>
+      <label id="difficulty-control" class="hidden">KI-Stärke<select id="difficulty"><option value="easy">Leicht</option><option value="medium" selected>Mittel</option><option value="hard">Schwer</option></select></label>
+      <div class="command-actions"><button id="new-game" type="button">Neue Partie</button><button id="undo" type="button" title="Letzte Zugfolge zurücknehmen">↶ Rücknahme</button><button id="clear-save" class="quiet" type="button">Spielstand löschen</button></div>
+    </section>
+    <section class="play-area">
+      <div class="board-panel">
+        <div class="turn-line"><span id="turn-indicator" class="turn-indicator"></span><strong id="status">Helle Steine beginnen.</strong><span id="turn-name">Helle Steine</span></div>
+        <div id="dice-area" class="dice-area"><div id="dice" class="dice" aria-label="Vier Würfel"></div><strong id="roll-total">–</strong><button id="roll" type="button">Würfeln</button></div>
+        <div id="board" class="board" role="grid" aria-label="Spielbrett des Königlichen Spiels von Ur"></div>
+        <div id="rule-context" class="rule-context">Vier Tetraederwürfel ergeben 0 bis 4 Schritte. Rosetten geben einen weiteren Wurf; die zentrale Rosette schützt vor dem Schlagen.</div>
+      </div>
+      <aside class="info-panel"><section class="counters"><div><span>Helle Reserve</span><strong id="light-reserve">7</strong></div><div><span>Dunkle Reserve</span><strong id="dark-reserve">7</strong></div><div><span>Helle ausgetragen</span><strong id="light-off">0</strong></div><div><span>Dunkle ausgetragen</span><strong id="dark-off">0</strong></div></section><section class="moves-panel"><div class="moves-heading"><h2>Zugverlauf</h2><span id="move-count">0 Züge</span></div><ol id="moves" class="moves"></ol></section><p class="source-note">Das Fundbrett aus Ur ist älter als die erhaltene Regeltafel. Diese Partie folgt einer modernen Rekonstruktion und ist keine unstrittige Originalregel.</p></aside>
+    </section>
+  </main>
+  <dialog id="confirm-new"><form method="dialog"><h2>Neue Partie beginnen?</h2><p>Die laufende Partie wird ersetzt.</p><div class="dialog-actions"><button value="cancel" class="quiet">Abbrechen</button><button id="confirm-new-game" value="confirm">Neue Partie</button></div></form></dialog>
+  <script src="./app.js"></script>
+</body>
+</html>
