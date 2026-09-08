@@ -122,13 +122,16 @@
       elements.mode.value = settings.mode; elements.humanSide.value = settings.humanSide; elements.difficulty.value = settings.difficulty;
       const computer = settings.mode === 'computer'; elements.humanSideControl.classList.toggle('hidden', !computer); elements.difficultyControl.classList.toggle('hidden', !computer);
       elements.board.replaceChildren();
-      const moves = selectedPiece === null ? legalMoves(state) : legalMoves(state).filter((move) => move.piece === selectedPiece);
+      const availableMoves = legalMoves(state);
+      const moves = selectedPiece === null ? availableMoves : availableMoves.filter((move) => move.piece === selectedPiece);
       for (let row = 0; row < 3; row++) for (let col = 0; col < 8; col++) {
         const present = row === 1 || col < 4 || col > 5;
         const square = document.createElement('button'); square.type = 'button'; square.className = present ? 'space' : 'space empty'; square.setAttribute('role', 'gridcell');
         if (!present) { elements.board.append(square); continue; }
         if (row === 2) square.classList.add('private-dark'); if (row === 1) square.classList.add('shared'); if (rosetteAt(row, col)) square.classList.add('rosette');
         const occupants = displayedPieces(row, col); occupants.forEach((occupant) => { const token = document.createElement('span'); token.className = `piece ${occupant.player}`; token.setAttribute('aria-hidden', 'true'); square.append(token); });
+        if (occupants.some((occupant) => occupant.player === state.turn && availableMoves.some((move) => move.piece === occupant.piece))) square.classList.add('movable');
+        if (occupants.some((occupant) => occupant.player === state.turn && occupant.piece === selectedPiece)) square.classList.add('selected');
         if (moves.some((move) => !move.bearOff && coordinateMatches(state.turn, move.to, row, col))) square.classList.add('target');
         if (state.lastAction?.type === 'move' && ((!state.lastAction.bearOff && coordinateMatches(state.lastAction.player, state.lastAction.to, row, col)) || (state.lastAction.from >= 0 && coordinateMatches(state.lastAction.player, state.lastAction.from, row, col)))) square.classList.add('last-move');
         square.disabled = state.winner || thinking || !isHumanTurn() || state.phase !== 'move';
@@ -141,7 +144,7 @@
       elements.undo.disabled = !history.length || thinking; elements.roll.disabled = state.phase !== 'roll' || !isHumanTurn() || thinking || Boolean(state.winner);
       if (state.winner) elements.status.textContent = `${name(state.winner)} gewinnen die Partie.`;
       else if (thinking) elements.status.textContent = 'Computer würfelt und plant seinen Zug …';
-      else if (state.phase === 'move') elements.status.textContent = `${name(state.turn)}: Wähle einen markierten Zug für ${state.dice.total} Schritt${state.dice.total === 1 ? '' : 'e'}.`;
+      else if (state.phase === 'move') elements.status.textContent = selectedPiece === null ? `${name(state.turn)}: Wähle einen leuchtenden Stein oder ein markiertes Einsetzfeld für ${state.dice.total} Schritt${state.dice.total === 1 ? '' : 'e'}.` : `${name(state.turn)}: Wähle das markierte Zielfeld.`;
       else elements.status.textContent = `${name(state.turn)} sind am Zug. Würfle die vier Tetraeder.`;
     }
     function act(next) { history.push({ before: state, after: next }); state = next; selectedPiece = null; save(); render(); if (!state.winner && settings.mode === 'computer' && state.turn !== settings.humanSide) computerTurn(); }
