@@ -156,7 +156,25 @@
       const bearOff = selectedPiece === null ? null : legalMoves(state).find((move) => move.piece === selectedPiece && move.bearOff);
       if (bearOff) act(applyMove(state, bearOff));
     }
-    function computerTurn() { thinking = true; render(); setTimeout(() => { if (state.phase === 'roll') { doRoll(); return; } const move = bestMove(state, settings.difficulty); thinking = false; if (move) act(applyMove(state, move)); else render(); }, 450); }
+    function computerTurn() {
+      thinking = true;
+      render();
+      setTimeout(() => {
+        if (state.phase === 'roll') {
+          const before = state;
+          state = applyRoll(state);
+          history.push({ before, after: state });
+          selectedPiece = null;
+          save();
+          if (state.turn !== other(settings.humanSide) || state.phase !== 'move' || state.winner) { thinking = false; render(); return; }
+          computerTurn();
+          return;
+        }
+        const move = bestMove(state, settings.difficulty);
+        thinking = false;
+        if (move) act(applyMove(state, move)); else render();
+      }, 450);
+    }
     function reset() { settings = { mode: elements.mode.value, humanSide: elements.humanSide.value, difficulty: elements.difficulty.value }; state = createGame(); history = []; selectedPiece = null; thinking = false; save(); render(); if (settings.mode === 'computer' && state.turn !== settings.humanSide) computerTurn(); }
     elements.roll.addEventListener('click', () => doRoll()); elements.mode.addEventListener('change', () => { settings.mode = elements.mode.value; render(); });
     elements.newGame.addEventListener('click', () => history.length && !state.winner && elements.confirm.showModal ? elements.confirm.showModal() : reset()); elements.confirmNewGame.addEventListener('click', reset);
