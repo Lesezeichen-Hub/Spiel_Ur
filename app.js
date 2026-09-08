@@ -150,11 +150,18 @@
     function act(next) { history.push({ before: state, after: next }); state = next; selectedPiece = null; save(); render(); if (!state.winner && settings.mode === 'computer' && state.turn !== settings.humanSide) computerTurn(); }
     function doRoll(random) { act(applyRoll(state, random)); }
     function choose(row, col) {
+      const own = displayedPieces(row, col).find((occupant) => occupant.player === state.turn);
+      if (own) {
+        selectedPiece = own.piece;
+        render();
+        const bearOff = legalMoves(state).find((move) => move.piece === selectedPiece && move.bearOff);
+        if (bearOff) act(applyMove(state, bearOff));
+        return;
+      }
       const target = legalMoves(state).find((move) => (selectedPiece === null || move.piece === selectedPiece) && !move.bearOff && coordinateMatches(state.turn, move.to, row, col));
       if (target) { act(applyMove(state, target)); return; }
-      const own = displayedPieces(row, col).find((occupant) => occupant.player === state.turn); selectedPiece = own?.piece ?? null; render();
-      const bearOff = selectedPiece === null ? null : legalMoves(state).find((move) => move.piece === selectedPiece && move.bearOff);
-      if (bearOff) act(applyMove(state, bearOff));
+      selectedPiece = null;
+      render();
     }
     function computerTurn() {
       thinking = true;
